@@ -16,6 +16,12 @@ import sys
 import statistics
 from typing import Any
 
+try:
+    import textstat  # optional: pip install textstat
+    _HAS_TEXTSTAT = True
+except ImportError:
+    _HAS_TEXTSTAT = False
+
 # ---------------------------------------------------------------------------
 # Pattern catalog (mirrors references/patterns.md)
 # ---------------------------------------------------------------------------
@@ -166,6 +172,31 @@ def check_run_on_sentences(sentences: list[str], formal: bool = False) -> list[d
     return flagged
 
 
+def readability_stats(text: str) -> dict[str, Any]:
+    """OSMAN and LIX readability scores via the `textstat` package (optional
+    dependency -- `pip install textstat`), using the original author's own
+    implementation of El-Haj & Rayson's OSMAN metric (LREC 2016) rather than
+    a home-grown reimplementation of its syllable-counting logic.
+
+    IMPORTANT: these scores track REGISTER AND COMPLEXITY, not AI-vs-human
+    origin. A formal legal/administrative document will always score much
+    less "readable" than a casual social post, whether a human or an AI
+    wrote it -- confirmed directly: this repo's own formal-register test
+    fixture scores far lower (OSMAN ~35) than its casual human fixture
+    (OSMAN ~88) despite both being clean human writing. Do not read a low
+    score here as evidence of AI generation. It is a complementary context
+    signal (is this readability level sane for the intended audience?), not
+    a detection signal.
+    """
+    if not _HAS_TEXTSTAT:
+        return {"available": False}
+    return {
+        "available": True,
+        "osman": round(textstat.osman(text), 2),
+        "lix": round(textstat.lix(text), 2),
+    }
+
+
 def vocabulary_stats(words: list[str]) -> dict[str, Any]:
     content_words = [w for w in words if w not in AR_STOPWORDS and len(w) > 1]
     if not content_words:
@@ -196,6 +227,7 @@ def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
     punct = check_foreign_punctuation(text)
     run_ons = check_run_on_sentences(sentences, formal=formal)
     vocab = vocabulary_stats(words)
+    readability = readability_stats(text)
 
     violations = (
         sum(n for _, n in phrase_hits)
@@ -224,6 +256,11 @@ def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
     print(f"  Run-on sentences (long + heavy و-joining): {len(run_ons)}")
     for r in run_ons[:3]:
         print(f"    -> ({r['words']} words, {r['waw_joins']} و-joins) {r['sentence']}")
+    if readability["available"]:
+        print(f"  Readability (context only, NOT an AI signal -- see readability_stats docstring): "
+              f"OSMAN={readability['osman']}, LIX={readability['lix']}")
+    else:
+        print("  Readability: unavailable (run 'pip install textstat' to enable OSMAN/LIX scores)")
     print(f"  TOTAL VIOLATIONS: {violations}")
     if len(words) > 0:
         print(f"  Violations per 100 words: {round(violations / len(words) * 100, 2)}")
@@ -233,6 +270,7 @@ def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
         "words": len(words),
         "vocab": vocab,
         "sentence_variance": variance,
+        "readability": readability,
     }
 
 

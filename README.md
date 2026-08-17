@@ -1,6 +1,6 @@
 # humanizer-ar
 
-A Claude Code skill that removes signs of AI-generated writing from **Arabic** text (MSA and dialectal). Built from scratch for Arabic, not a translation of an English pattern list run through Google Translate.
+A Claude Code skill that removes signs of AI-generated writing from **Arabic** text. Built from scratch for Arabic, not a translation of an English pattern list run through Google Translate. Pattern catalog and mechanical checks are MSA-focused, with a register-consistency check for dialect drift — see "Known limitations" below for what's not covered yet.
 
 ## Why this exists
 
@@ -15,7 +15,7 @@ This skill is grounded in two things instead of guesswork:
 
 - `skills/humanizer-ar/SKILL.md` — the skill definition Claude Code loads
 - `skills/humanizer-ar/references/patterns.md` — the full pattern catalog (20 patterns across content, linguistic, orthographic, and statistical categories), each with real before/after examples
-- `scripts/score_arabic_text.py` — a zero-dependency mechanical scanner that measures a text against the pattern catalog, plus real quantitative signals (vocabulary concentration, type-token ratio, sentence-length variance)
+- `scripts/score_arabic_text.py` — a zero-*required*-dependency mechanical scanner that measures a text against the pattern catalog, plus real quantitative signals (vocabulary concentration, type-token ratio, sentence-length variance), and optional OSMAN/LIX readability scores (`pip install textstat`) using [El-Haj & Rayson's original implementation](https://github.com/drelhaj/OsmanReadability), not a reimplementation
 - `tests/test_scanner.py` — a regression suite that encodes what testing this against real text actually found (see below)
 
 ## Install
@@ -68,7 +68,13 @@ python3 tests/test_scanner.py
 
 ## A note on limits
 
-This is a diagnostic aid, not a verdict. [Almohaimeed et al. (2025)](https://arxiv.org/abs/2511.16690) document real false-positive problems with automated Arabic AI-text detectors on lightly-edited human writing. Treat every flag from this skill or its scanner as "worth a second look," never as proof.
+This is a diagnostic aid, not a verdict. [Almohaimeed et al. (2025)](https://arxiv.org/abs/2511.16690) document real false-positive problems with automated Arabic AI-text detectors on lightly-edited human writing. More strikingly: [Labib et al.'s 2026 AbjadGenEval ensemble system](https://aclanthology.org/2026.abjadnlp-1.62.pdf) — a fine-tuned AraBERT/BERT-arabic ensemble, not a simple heuristic scanner like this one — still misclassified **~38% of genuinely human-written Arabic as machine-generated** on the official shared-task test set (0.62 precision at 0.98 recall). If a purpose-trained transformer ensemble gets human Arabic wrong more than a third of the time, a phrase-matching heuristic scanner certainly can too. Treat every flag from this skill or its scanner as "worth a second look," never as proof.
+
+## Known limitations
+
+- **Dialectal Arabic is not covered.** The pattern catalog, banned-phrase list, and every mechanical check are tuned for Modern Standard Arabic. [Alharthi (2025)](https://www.researchgate.net/publication/391615130) found that dedicated fine-tuned models (AraBERT, AraELECTRA) clearly outperform feature-based/pattern approaches specifically for detecting AI-generated *dialectal* Arabic — the linguistic ground truth for what's "natural" varies too much across Gulf, Levantine, Egyptian, and Maghrebi Arabic to encode reliably as a hand-built pattern list without native-speaker validation per dialect. Rather than ship a shallow, likely-wrong dialect catalog, this skill limits itself to a lighter, honest signal: flagging when text that was supposed to be dialectal keeps drifting back into standard MSA phrasing mid-passage (a real, documented AI tell — see SKILL.md step 4), without claiming to catch dialect-specific AI patterns within a given dialect itself.
+- **OSMAN/LIX readability scores are a register signal, not an AI-detection signal.** See the `readability_stats()` docstring in `scripts/score_arabic_text.py` — a low score means "formal/complex," not "machine-generated."
+- **The scanner is heuristic, not a classifier.** It has no false-positive/recall numbers of its own the way a trained model would, because it isn't one — it's a documented, testable, but fundamentally rule-based aid. See "A note on limits" above.
 
 ## Credits
 
