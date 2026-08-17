@@ -108,7 +108,25 @@ def main():
         f"(got {round(rate, 2)} violations/100 words)",
     )
 
-    # --- 7. Vocabulary stats sanity: all fixtures should compute without error ---
+    # --- 7. Tatweel check must not flag the standard Hijri-year abbreviation (regression) ---
+    # Found via testing on real dated formal Arabic text: "1443هـ" was flagged as
+    # decorative tatweel/kashida when it's actually the standard AH-calendar marker.
+    hijri_text = "صدر القرار عام 1443هـ الموافق 2022م، وتم تطبيقه عام 1444هـ لاحقًا."
+    hijri_tatweel = sat.check_tatweel(hijri_text)
+    check(
+        "tatweel check does not flag the Hijri-year abbreviation (هـ)",
+        hijri_tatweel["count"] == 0 and hijri_tatweel["flag"] is False,
+        f"(got count={hijri_tatweel['count']}, flag={hijri_tatweel['flag']})",
+    )
+    real_tatweel_text = "وهذا امتداد غير مبرر في الكلمة ـــــ لأغراض التنضيد فقط."
+    real_tatweel = sat.check_tatweel(real_tatweel_text)
+    check(
+        "tatweel check still flags genuine decorative elongation",
+        real_tatweel["count"] > 0 and real_tatweel["flag"] is True,
+        f"(got count={real_tatweel['count']}, flag={real_tatweel['flag']})",
+    )
+
+    # --- 8. Vocabulary stats sanity: all fixtures should compute without error ---
     bad_vocab = sat.vocabulary_stats(bad_words)
     good_vocab = sat.vocabulary_stats(good_words)
     check(

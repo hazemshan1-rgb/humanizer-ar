@@ -112,7 +112,16 @@ def check_diacritics(text: str) -> dict[str, Any]:
 
 
 def check_tatweel(text: str) -> dict[str, Any]:
-    n = text.count(TATWEEL)
+    """Count decorative/unjustified tatweel (kashida) elongation.
+
+    Excludes ه + ـ (e.g. "1443هـ") -- the standard Hijri-calendar-year
+    abbreviation, equivalent to "AD"/"BC" in English. This is completely
+    standard Arabic orthography, not decorative stretching, and a naive
+    tatweel count flagged it as suspicious on real, genuinely dated formal
+    text during testing.
+    """
+    hijri_marker = len(re.findall(r"ه" + TATWEEL + r"(?=\s|$|[،.,؛؟!])", text))
+    n = text.count(TATWEEL) - hijri_marker
     return {"count": n, "flag": n > 0}
 
 

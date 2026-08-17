@@ -56,7 +56,9 @@ This wasn't shipped on the first pass. Before publishing, the scanner was stress
 
 2. **A run-on-sentence check that flagged half of all sentences in a formally structured Arabic sample.** The check for "long sentences joined by repeated و instead of periods" used a 35-word threshold, borrowed from the intuition that long compound sentences read as generated/unnatural. Testing against long-form, formally structured Arabic writing showed a **median sentence length of 35 words**, a 90th percentile of 50 words, and legitimate sentences with up to 9 و-joins. Long, heavily-conjoined sentences are the *norm* in formal, long-form Arabic register (reports, regulations, official correspondence), not an AI tell there. Fixed by adding a `--formal` mode with thresholds calibrated above what real formally structured prose exhibits at its 90th percentile.
 
-The regression suite in `tests/test_scanner.py` encodes both findings as permanent tests, so neither regresses silently. Run it with:
+3. **A tatweel/kashida check that flagged the standard Hijri-year abbreviation.** A real dated document ("...عام 1443هـ...") triggered 4 false "decorative elongation" flags, because the tatweel character is also the second half of the standard هـ ("AH", i.e. Hijri-calendar) abbreviation glyph — completely normal orthography, equivalent to writing "AD" after a year in English, not stretching for emphasis. Fixed by excluding the ه+tatweel-at-word-boundary pattern before counting.
+
+The regression suite in `tests/test_scanner.py` encodes all three findings as permanent tests, so none regress silently. Run it with:
 
 ```bash
 python3 tests/test_scanner.py
