@@ -128,23 +128,23 @@ def check_foreign_punctuation(text: str) -> dict[str, Any]:
     return {"em_dash": em_dash, "curly_quotes": curly_quotes, "flag": (em_dash + curly_quotes) > 0}
 
 
-def check_run_on_sentences(sentences: list[str], academic: bool = False) -> list[dict[str, Any]]:
+def check_run_on_sentences(sentences: list[str], formal: bool = False) -> list[dict[str, Any]]:
     """Flag sentences that are long AND rely heavily on repeated و-conjunction
     instead of being split into separate sentences.
 
-    CALIBRATION NOTE (found via testing against a real, human-written/reviewed
-    Arabic thesis chapter): general/marketing/conversational Arabic prose
-    treats a 35-word, 3-و-join sentence as unusually long. Formal academic and
-    legal Arabic does not -- in the real thesis sample used to test this
-    script, the MEDIAN sentence length was 35 words, with a 90th percentile
-    of 50 words and up to 9 و-joins in a single (normal, reviewed) sentence.
-    A 35-word threshold flagged roughly half of all sentences in that
-    document, which is useless as a signal. Pass academic=True (or --academic
-    on the CLI) for academic/legal/formal register text, which uses a
-    threshold set above what real reviewed academic prose exhibits at its
-    90th percentile, so only genuine outliers get flagged.
+    CALIBRATION NOTE (found via testing against a long-form, formally
+    structured Arabic writing sample): general/marketing/conversational
+    Arabic prose treats a 35-word, 3-و-join sentence as unusually long.
+    Formal, long-form Arabic writing does not -- in a formally structured
+    sample used to test this script, the MEDIAN sentence length was 35 words,
+    with a 90th percentile of 50 words and up to 9 و-joins in a single
+    normal sentence. A 35-word threshold flagged roughly half of all
+    sentences in that sample, which is useless as a signal. Pass
+    formal=True (or --formal on the CLI) for formal, long-form register
+    text, which uses a threshold set above what that formal sample exhibits
+    at its 90th percentile, so only genuine outliers get flagged.
     """
-    if academic:
+    if formal:
         threshold_words, min_waw = 65, 8
     else:
         threshold_words, min_waw = 35, 3
@@ -172,8 +172,8 @@ def vocabulary_stats(words: list[str]) -> dict[str, Any]:
     return {"ttr": ttr, "top5_share": top5_share, "unique": unique, "total": total}
 
 
-def score(text: str, label: str, academic: bool = False) -> dict[str, Any]:
-    print(f"\n{'='*66}\n{label}{' [academic mode]' if academic else ''}\n{'='*66}")
+def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
+    print(f"\n{'='*66}\n{label}{' [formal mode]' if formal else ''}\n{'='*66}")
     sentences = split_sentences(text)
     words = tokenize_words(text)
     lengths = [len(s.split()) for s in sentences]
@@ -185,7 +185,7 @@ def score(text: str, label: str, academic: bool = False) -> dict[str, Any]:
     tatweel = check_tatweel(text)
     digits = check_mixed_digits(text)
     punct = check_foreign_punctuation(text)
-    run_ons = check_run_on_sentences(sentences, academic=academic)
+    run_ons = check_run_on_sentences(sentences, formal=formal)
     vocab = vocabulary_stats(words)
 
     violations = (
@@ -229,18 +229,18 @@ def score(text: str, label: str, academic: bool = False) -> dict[str, Any]:
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    academic = "--academic" in args
-    paths = [a for a in args if a != "--academic"]
+    formal = "--formal" in args
+    paths = [a for a in args if a != "--formal"]
     if not paths:
-        print("Usage: score_arabic_text.py [--academic] <file1.txt> [file2.txt ...]")
-        print("  --academic: use higher run-on-sentence thresholds calibrated for")
-        print("              academic/legal Arabic register (see check_run_on_sentences docstring)")
+        print("Usage: score_arabic_text.py [--formal] <file1.txt> [file2.txt ...]")
+        print("  --formal: use higher run-on-sentence thresholds calibrated for")
+        print("            formal, long-form Arabic register (see check_run_on_sentences docstring)")
         sys.exit(1)
     results = {}
     for path in paths:
         with open(path, encoding="utf-8") as f:
             text = f.read()
-        results[path] = score(text, path, academic=academic)
+        results[path] = score(text, path, formal=formal)
 
     if len(results) > 1:
         print(f"\n{'='*66}\nSUMMARY\n{'='*66}")

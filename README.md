@@ -8,7 +8,7 @@ The well-known `humanizer` skills for Claude Code ([blader/humanizer](https://gi
 
 This skill is grounded in two things instead of guesswork:
 
-1. **Real stylometric research on Arabic LLM output**: [Al-Shaibani & Ahmed, "The Arabic AI Fingerprint" (2025)](https://arxiv.org/abs/2505.23276), which found that machine-generated Arabic concentrates disproportionately on its top-frequency words, has a much narrower long-tail vocabulary than human writing, and underuses domain-specific/technical terminology in academic contexts — plus [Khairallah & Zubiaga, "ALHD" (2025)](https://arxiv.org/abs/2510.03502), a 400K-sample benchmark dataset for Arabic human-vs-LLM text.
+1. **Real stylometric research on Arabic LLM output**: [Al-Shaibani & Ahmed, "The Arabic AI Fingerprint" (2025)](https://arxiv.org/abs/2505.23276), which found that machine-generated Arabic concentrates disproportionately on its top-frequency words, has a much narrower long-tail vocabulary than human writing, and underuses domain-specific/technical terminology compared to human writers — plus [Khairallah & Zubiaga, "ALHD" (2025)](https://arxiv.org/abs/2510.03502), a 400K-sample benchmark dataset for Arabic human-vs-LLM text.
 2. **Direct observation** of actual output from GPT-4, Jais, ALLaM, Llama, and Claude on Arabic prompts, compared against natural Arabic writing across formal and informal registers.
 
 ## What's in the box
@@ -43,18 +43,18 @@ The mechanical scanner also runs standalone, no Claude required:
 
 ```bash
 python3 scripts/score_arabic_text.py path/to/text.txt
-python3 scripts/score_arabic_text.py --academic path/to/thesis_chapter.txt
+python3 scripts/score_arabic_text.py --formal path/to/document.txt
 ```
 
-Use `--academic` for formal academic/legal Arabic — see "What testing actually found" below for why this flag exists.
+Use `--formal` for long-form, formally structured Arabic (reports, official correspondence, regulations) — see "What testing actually found" below for why this flag exists.
 
 ## What testing actually found
 
-This wasn't shipped on the first pass. Before publishing, the scanner was stress-tested against a deliberately AI-cliche-dense synthetic sample, a clean human-written sample, and a real, human-written, formally reviewed piece of Arabic academic prose. That testing caught two real design bugs that would otherwise have shipped:
+This wasn't shipped on the first pass. Before publishing, the scanner was stress-tested against a deliberately AI-cliche-dense synthetic sample, a clean human-written sample, and a long-form, formally structured Arabic sample. That testing caught two real design bugs that would otherwise have shipped:
 
 1. **A diacritics check that flagged normal Arabic as suspicious.** The first version flagged any text with "inconsistent" partial diacritic coverage as an AI tell. Testing showed it fired at nearly the same rate (~8-9% of words) on *both* the AI-cliche sample and the clean human sample, because that rate is just... how Arabic works: tanween-fatha on a final alef (تقريبًا, شكرًا), the initial damma marking passive voice (تُستخدم vs تستخدم), and disambiguating shadda are all standard orthography, not AI artifacts. Fixed by making this check informational-only — it reports the number, it doesn't flag it.
 
-2. **A run-on-sentence check that flagged half of all sentences in real academic Arabic.** The check for "long sentences joined by repeated و instead of periods" used a 35-word threshold, borrowed from the intuition that long compound sentences read as generated/unnatural. Testing against real, reviewed academic Arabic prose showed a **median sentence length of 35 words**, a 90th percentile of 50 words, and legitimate sentences with up to 9 و-joins. Long, heavily-conjoined sentences are the *norm* in formal/academic/legal Arabic register, not an AI tell there. Fixed by adding a `--academic` mode with thresholds calibrated above what real reviewed academic prose exhibits at its 90th percentile.
+2. **A run-on-sentence check that flagged half of all sentences in a formally structured Arabic sample.** The check for "long sentences joined by repeated و instead of periods" used a 35-word threshold, borrowed from the intuition that long compound sentences read as generated/unnatural. Testing against long-form, formally structured Arabic writing showed a **median sentence length of 35 words**, a 90th percentile of 50 words, and legitimate sentences with up to 9 و-joins. Long, heavily-conjoined sentences are the *norm* in formal, long-form Arabic register (reports, regulations, official correspondence), not an AI tell there. Fixed by adding a `--formal` mode with thresholds calibrated above what real formally structured prose exhibits at its 90th percentile.
 
 The regression suite in `tests/test_scanner.py` encodes both findings as permanent tests, so neither regresses silently. Run it with:
 
@@ -62,7 +62,7 @@ The regression suite in `tests/test_scanner.py` encodes both findings as permane
 python3 tests/test_scanner.py
 ```
 
-The client thesis chapter used for that specific calibration test was **not** included in this repo (it's someone else's unpublished academic work) — a synthetic academic-register sample with an equivalent sentence-length profile is included instead (`tests/fixtures/synthetic_academic_sample.txt`).
+`tests/fixtures/synthetic_formal_sample.txt` is a synthetic, purpose-written sample with the same long-sentence profile used for that calibration test — no real third-party document is included in this repo.
 
 ## A note on limits
 
