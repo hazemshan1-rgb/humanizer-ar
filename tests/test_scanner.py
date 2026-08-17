@@ -126,7 +126,34 @@ def main():
         f"(got count={real_tatweel['count']}, flag={real_tatweel['flag']})",
     )
 
-    # --- 8. Vocabulary stats sanity: all fixtures should compute without error ---
+    # --- 8. Light-verb calque check (regression for the fixed VSO/prefix-attachment bug) ---
+    # The first version of this regex matched zero real sentences, including its own
+    # worked example in patterns.md #26, because it missed that ب- attaches as a bound
+    # prefix (بإجراء, not "ب إجراء") and that Arabic VSO order puts the subject between
+    # the verb and بـ ("قامت الشركة بإجراء..."). Locking in the fix plus the deliberate
+    # precision tradeoff (curated verbal-noun list, not "verb + any ب-word").
+    light_verb_hit = sat.check_light_verb_overuse(
+        "قامت الشركة بإجراء دراسة شاملة حول احتياجات العملاء."
+    )
+    check(
+        "light-verb check catches the calque construction (قامت...بإجراء)",
+        light_verb_hit["count"] >= 1 and light_verb_hit["flag"] is True,
+        f"(got {light_verb_hit})",
+    )
+    light_verb_clean = sat.check_light_verb_overuse("درست الشركة احتياجات العملاء بشكل شامل.")
+    check(
+        "light-verb check does not flag the direct-verb rewrite",
+        light_verb_clean["count"] == 0 and light_verb_clean["flag"] is False,
+        f"(got {light_verb_clean})",
+    )
+    light_verb_real_verb = sat.check_light_verb_overuse("قام الرجل بسرعة ليفتح الباب.")
+    check(
+        "light-verb check does not flag قام used as a real verb + adverb (قام بسرعة)",
+        light_verb_real_verb["count"] == 0,
+        f"(got {light_verb_real_verb})",
+    )
+
+    # --- 9. Vocabulary stats sanity: all fixtures should compute without error ---
     bad_vocab = sat.vocabulary_stats(bad_words)
     good_vocab = sat.vocabulary_stats(good_words)
     check(

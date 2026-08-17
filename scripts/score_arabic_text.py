@@ -44,6 +44,30 @@ BANNED_PHRASES = [
 # adjectives/fillers whose overuse (not mere presence) is the tell
 FILLER_ADJECTIVES = ["ريادي", "رائد", "مبتكر", "استثنائي", "فريد من نوعه", "حيوي", "محوري"]
 
+# light-verb (empty verb + verbal noun) constructions that substitute for a
+# direct verb -- a documented English-calque collocation pattern, see
+# references/patterns.md pattern #26.
+#
+# ب- attaches as a bound prefix directly onto the following noun with no
+# space (بإجراء, not "ب إجراء"), and Arabic's default VSO word order puts
+# the subject BETWEEN the verb and بـ ("قامت الشركة بإجراء..."). An early
+# version of this regex missed both facts and silently matched zero
+# real-world sentences, including its own worked example in patterns.md --
+# caught immediately by testing against that exact example. A fully general
+# "verb + ب-anything" pattern was tried next and rejected: بـ is also an
+# ordinary preposition ("قام بسرعة" = "stood up quickly" -- a real verb,
+# not a light-verb calque), so matching any ب-word after قام/قامت would
+# false-positive constantly. Restricted instead to a curated list of common,
+# structurally unambiguous verbal nouns (مصادر) that only appear in this
+# light-verb construction in practice.
+_LIGHT_VERB_MASADIR = "|".join([
+    "بإجراء", "بتنفيذ", "بتطوير", "بإعداد", "بمراجعة", "بتحليل", "بدراسة",
+    "بتحديث", "بتصميم", "ببناء", "بعمل", "بوضع", "بتوفير", "بتقديم", "بزيارة",
+])
+LIGHT_VERB_RE = re.compile(
+    r"(?:قام|قامت|يقوم|تقوم)(?:\s+\S+){0,3}\s+(?:" + _LIGHT_VERB_MASADIR + r")"
+)
+
 TATWEEL = "ـ"
 DIACRITICS = "ًٌٍَُِّْٰ"
 WESTERN_DIGITS = set("0123456789")
@@ -88,6 +112,23 @@ def check_filler_adjectives(text: str) -> list[tuple[str, int]]:
         if n:
             hits.append((adj, n))
     return hits
+
+
+def check_light_verb_overuse(text: str) -> dict[str, Any]:
+    """Count قام بـ / قامت بـ / يقوم بـ / تقوم بـ / تم القيام بـ constructions.
+
+    These "light verb + verbal noun" constructions (e.g. قام بإجراء دراسة)
+    substitute for a direct verb (أجرى دراسة), mirroring the English light-verb
+    pattern ("conduct a study" vs "study"). Documented in Arabic collocation
+    research (see references/patterns.md pattern #26) as a marker of
+    English-influenced/calqued Arabic. Unlike most patterns in this catalog,
+    this one gets flagged rather than left informational-only: the direct
+    verb is almost always available as an alternative in Arabic, unlike (for
+    example) run-on sentences, where formal register genuinely requires long
+    coordinated sentences with no simpler alternative.
+    """
+    matches = LIGHT_VERB_RE.findall(text)
+    return {"count": len(matches), "flag": len(matches) > 0}
 
 
 def check_diacritics(text: str) -> dict[str, Any]:
@@ -246,6 +287,7 @@ def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
 
     phrase_hits = check_phrases(text)
     filler_hits = check_filler_adjectives(text)
+    light_verb = check_light_verb_overuse(text)
     diac = check_diacritics(text)
     tatweel = check_tatweel(text)
     digits = check_mixed_digits(text)
@@ -258,6 +300,7 @@ def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
     violations = (
         sum(n for _, n in phrase_hits)
         + sum(n for _, n in filler_hits)
+        + light_verb["count"]
         + (1 if diac["flag"] else 0)
         + (1 if tatweel["flag"] else 0)
         + (1 if digits["flag"] else 0)
@@ -272,6 +315,8 @@ def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
           f"(higher share = more AI-like concentration per Al-Shaibani & Ahmed 2025)")
     print(f"  Banned phrase hits: {phrase_hits if phrase_hits else 'none'}")
     print(f"  Filler-adjective hits: {filler_hits if filler_hits else 'none'}")
+    print(f"  Light-verb calque constructions (قام بـ/يقوم بـ...): {light_verb['count']} "
+          f"{'[FLAG]' if light_verb['flag'] else ''}")
     print(f"  Diacritics: {diac['pct_diacritized_words']}% of words carry a diacritic "
           f"(informational only -- see docstring, no reliable AI threshold exists)")
     print(f"  Tatweel/kashida uses: {tatweel['count']} {'[FLAG]' if tatweel['flag'] else ''}")
