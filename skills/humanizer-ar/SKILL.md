@@ -145,15 +145,28 @@ python3 scripts/score_arabic_text.py path/to/text.txt
 
 ## المرجع
 
-هذا الدليل مبني على:
+هذا الدليل مبني على مصادر بمستويات توثيق مختلفة، موضّحة صراحة أدناه بدل الإيحاء بتساوي الثقة بينها:
+
+**مصادر قُرئت مباشرة (نص كامل، عبر PDF فعلي):**
 - Al-Shaibani, M. S. & Ahmed, M. (2025). *The Arabic AI Fingerprint: Stylometric Analysis and Detection of Large Language Models Text*. arXiv:2505.23276
 - Khairallah, A. & Zubiaga, A. (2025). *ALHD: A Large-Scale and Multigenre Benchmark Dataset for Arabic LLM-Generated Text Detection*. arXiv:2510.03502
-- Labib, M., Ashraf, N., Fetouh, A. M., & Nayel, H. (2026). *REGLAT at AbjadGenEval Shared Task: Multi-Model Ensemble Approach for Arabic AI-Generated Text Detection*. AbjadNLP 2026, ACL Anthology — even a state-of-the-art fine-tuned BERT ensemble misclassified ~38% of human-written Arabic as machine-generated on the official test set (0.62 precision at 0.98 recall)، وهو ما يؤكد ضرورة التعامل مع أي كاشف آلي كمؤشر لا حكمًا قاطعًا
-- Alharthi, H. (2025). *Investigation into the Identification of AI-Generated Short Dialectal Arabic Texts*. IEEE Access, 13, 85131–85138 — وجدت أن النماذج المدرَّبة خصيصًا (AraBERT، AraELECTRA) تتفوق بوضوح على الأساليب القائمة على السمات (feature-based) في كشف النص الآلي باللهجات العربية، وهو سبب عدم محاولة هذا الدليل بناء كتالوج لهجي شامل حتى الآن — راجع "الفجوات المعروفة" في README
-- El-Haj, M. & Rayson, P. (2016). *OSMAN — A Novel Arabic Readability Metric*. LREC 2016 — مصدر مقياس OSMAN المستخدم اختياريًا في `scripts/score_arabic_text.py` عبر حزمة `textstat` الرسمية، لا إعادة تطبيق يدوية له
-- Brashi, A. S. *Arabic Collocations: Implications for Translation*, و[أدوات استخلاص التصادف اللفظي العربي مثل Musaheb] — أساس النمطين 26-27 (الأفعال المساعدة الفارغة، والتصادفات اللفظية المُقحمة من الإنجليزية)
-- الجرجاني، عبد القاهر (القرن الرابع الهجري). *دلائل الإعجاز* و*أسرار البلاغة* — نظرية النظم، الأساس النظري الكلاسيكي لتركيز هذا الدليل على بنية الجملة لا الزخرفة المعجمية فقط
-- Marathe, M. (2022). *Creation of a Numerical Scoring System to Objectively Measure and Compare the Level of Rhetoric in Arabic Texts: A Feasibility Study, and A Working Prototype*. MA Advanced Arabic dissertation, University of Exeter (supervisor: Dr Mustafa Baig). DOI: 10.5281/zenodo.15765533 — أول محاولة أكاديمية لقياس كثافة الأدوات البلاغية العربية رقميًا عبر 84 أداة موزعة على ثلاثة مجالات (ترتيب الكلام وبنية الجملة، البيان، البديع)، بالإضافة إلى فئة "عيوب الفصاحة" السلبية. أساس قسم "علم الفصاحة والبلاغة الكلاسيكي" (الأنماط 21-25) في `references/patterns.md`
-- Dickins, J. (2017). *The pervasiveness of coordination in Arabic, with reference to Arabic>English translation*. Languages in Contrast, 17(2), 229-254 — دراسة محكّمة تؤكد أن كثافة العطف بـ"و" سمة عامة في العربية عبر كل الأسجلة تقريبًا (وليست خاصية سجل رسمي)، بل وتوثّق حالات كتابة متأثرة بالإنجليزية **تقلّل** الروابط بدل زيادتها. راجع تحذير الثقة المنخفضة في نمط رقم 18 بـ `references/patterns.md` — هذا أضعف نمط في الكتالوج بأكمله ومتجه اتجاهه الفعلي غير مؤكد
+- Labib, M., Ashraf, N., Fetouh, A. M., & Nayel, H. (2026). *REGLAT at AbjadGenEval Shared Task*. AbjadNLP 2026, ACL Anthology — كاشف BERT مدرَّب متخصص، لا كاشف بسيط كهذا الدليل، ومع ذلك صنّف ~38% من النص البشري الحقيقي خطأً كنص آلي على مجموعة الاختبار الرسمية (دقة 0.62 عند استدعاء 0.98)
+- Almohaimeed, S. et al. (2025). *AI Text Detectors and the Misclassification of Slightly Polished Arabic Text*. arXiv:2511.16690v2 — **تم التحقق المباشر وتصحيح الأرقام** (النسخة الأولى من هذا المرجع كانت غامضة الأرقام). النتيجة الحقيقية أقوى بكثير مما وُثِّق سابقًا: أفضل كاشف تجاري (Originality.AI) حقق 96% دقة و8% معدل إيجابي كاذب على نص عادي، لكن دقته **انهارت إلى 12% مع معدل إيجابي كاذب 88%** على نص بشري "مُحسَّن" بنسبة 10% فقط بواسطة Mistral أو Gemma-3. أفضل نموذج عام (Claude-4 Sonnet) انخفضت دقته من 83.51% إلى ~65% بنفس السيناريو
+- Dickins, J. (2017). *The pervasiveness of coordination in Arabic*. Languages in Contrast, 17(2), 229-254 — راجع تحذير الثقة المنخفضة في نمط رقم 18
+- Marathe, M. (2022). *Creation of a Numerical Scoring System to Objectively Measure and Compare the Level of Rhetoric in Arabic Texts*. MA Advanced Arabic dissertation, University of Exeter. DOI: 10.5281/zenodo.15765533 — أساس الأنماط 21-25
+- Mustafa, B. A. (2010). *Collocation in English and Arabic: A Linguistic and Cultural Analysis*. Majallat Kulliyat al-Tarbiya al-Asasiya, Al-Mustansiriya University — تُشير مباشرة (وبأرقام صفحات) إلى Brashi (2005) كمرجع تأسيسي لموضوع التصادف اللفظي العربي؛ تغطي نظريات Firth وHalliday وSinclair في التصادف اللفظي، أساس إضافي للنمطين 26-27
+
+**مصادر مؤكَّدة وظيفيًا (لم تُقرأ الورقة نفسها، لكن الأداة نفسها اختُبرت وتعمل فعليًا):**
+- El-Haj, M. & Rayson, P. (2016). *OSMAN — A Novel Arabic Readability Metric*. LREC 2016 — لم تُقرأ الورقة، لكن تنفيذ المؤلف الرسمي عبر حزمة `textstat` اختُبر مباشرة وأعطى نتائج منطقية على عينات هذا المستودع
+
+**مصادر مؤكَّدة بشكل ثانوي (استخلاص من نتائج بحث، لم يُقرأ النص الأساسي مباشرة رغم محاولات فعلية):**
+- Alharthi, H. (2025). *Investigation into the Identification of AI-Generated Short Dialectal Arabic Texts*. IEEE Access, 13, 85131–85138, DOI: 10.1109/ACCESS.2025.3568696 — **محاولات وصول متعددة فشلت** (DOAJ وResearchGate وScienceDirect وIEEE Xplore، جميعها 403/غير متاح). الرقم المتكرر عبر عدة عمليات بحث مستقلة (97% دقة للنماذج المدرَّبة كـAraELECTRA/AraBERT مقابل ~92% للأساليب القائمة على السمات) متسق لكنه غير مؤكَّد من النص الأصلي مباشرة — استخدمه بحذر أكبر من بقية القائمة
+- Brashi, A. S. (2005). *Arabic Collocations: Implications for Translation*. PhD thesis, University of Western Sydney — لم تُقرأ الأطروحة نفسها مباشرة (كل روابط الوصول المباشر حُجبت)، لكن وجودها ومحتواها مؤكَّدان بشكل غير مباشر عبر استشهاد Mustafa (2010) المقروء مباشرة أعلاه
+- الجرجاني، عبد القاهر (القرن الرابع الهجري). *دلائل الإعجاز* و*أسرار البلاغة* — نظرية النظم. لم يُقرأ النص الأصلي أو ترجمة كاملة له مباشرة؛ المصدر الفعلي موسوعي/ثانوي (ويكيبيديا العربية)، لكن وجود دراسات أكاديمية معتبرة عن النظرية تم التحقق منه (Margaret Larkin, *The Theology of Meaning*؛ Kamal Abu-Deeb, *Al-Jurjani's Theory of Poetic Imagery*) — النظرية ذاتها كلاسيكية راسخة غير مثيرة للجدل، لكن مستوى التوثيق هنا أضعف من بقية القائمة
+
+**مصادر إضافية مباشرة الصلة بالنمط 26 (الأفعال المساعدة الفارغة):**
+- The Arabic Pages (2026). *Academic Arabic: Carrying Out, Conducting, Doing*. thearabicpages.com — قُرئ مباشرة. تنصح صراحة بعدم الإفراط في "قام بـ" وتقترح نفس المثال المستخدم في هذا الدليل (قامت بالتحليل ← حللت)، تأكيد تربوي مستقل للنمط
+- مجمع اللغة العربية بالقاهرة، مجموع القرارات — يجيز المجمع استخدام بعض الألفاظ الأعجمية عند الضرورة "على طريقة العرب في تعريبهم"، ويُعرِّف الدخيل بأنه "كل لفظ أعجمي استعصى على النظام اللغوي ولم يخضع لأقيسة العربية" — أساس رسمي معياري (لا وصفي فقط) للنمط 25، الدخيل/التعريب
+
 - ملاحظات لغوية مباشرة على المخرجات الفعلية لنماذج عربية وعامة (GPT-4، Jais، ALLaM، Claude) مقارنة بكتابة عربية فصحى وعامية طبيعية
 - بنية الدليل مستوحاة من [`blader/humanizer`](https://github.com/blader/humanizer) (النسخة الإنجليزية المبنية على دليل ويكيبيديا "Signs of AI writing") ونسخته الصينية `humanizer-zh`، لكن كتالوج الأنماط هنا أصلي بالكامل وليس ترجمة.
