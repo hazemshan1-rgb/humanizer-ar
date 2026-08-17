@@ -9,12 +9,13 @@ The well-known `humanizer` skills for Claude Code ([blader/humanizer](https://gi
 This skill is grounded in two things instead of guesswork:
 
 1. **Real stylometric research on Arabic LLM output**: [Al-Shaibani & Ahmed, "The Arabic AI Fingerprint" (2025)](https://arxiv.org/abs/2505.23276), which found that machine-generated Arabic concentrates disproportionately on its top-frequency words, has a much narrower long-tail vocabulary than human writing, and underuses domain-specific/technical terminology compared to human writers — plus [Khairallah & Zubiaga, "ALHD" (2025)](https://arxiv.org/abs/2510.03502), a 400K-sample benchmark dataset for Arabic human-vs-LLM text.
-2. **Direct observation** of actual output from GPT-4, Jais, ALLaM, Llama, and Claude on Arabic prompts, compared against natural Arabic writing across formal and informal registers.
+2. **Classical Arabic rhetoric (بلاغة/فصاحة)**, not just modern NLP. Patterns 21-25 in the catalog are built on [Marathe (2022), *Creation of a Numerical Scoring System to Objectively Measure and Compare the Level of Rhetoric in Arabic Texts*](https://doi.org/10.5281/zenodo.15765533) — an MA dissertation (University of Exeter) that formalized 84 classical rhetorical devices across three domains (word order/sentence structure, figures of speech, embellishments) plus a documented negative-scoring "eloquence defects" category (poorly-integrated loanwords, catachresis, phonetic incongruity). AI-generated Arabic is diagnosably weak in exactly the domain the dissertation's own authors note even native speakers overlook: sentence-structure-level rhetoric (khabar/insha' variety, context-calibrated emphasis, deliberate concision), not just the simile/metaphor most people think of first.
+3. **Direct observation** of actual output from GPT-4, Jais, ALLaM, Llama, and Claude on Arabic prompts, compared against natural Arabic writing across formal and informal registers.
 
 ## What's in the box
 
 - `skills/humanizer-ar/SKILL.md` — the skill definition Claude Code loads
-- `skills/humanizer-ar/references/patterns.md` — the full pattern catalog (20 patterns across content, linguistic, orthographic, and statistical categories), each with real before/after examples
+- `skills/humanizer-ar/references/patterns.md` — the full pattern catalog (25 patterns across content, linguistic, orthographic, statistical, and classical-rhetoric categories), each with real before/after examples
 - `scripts/score_arabic_text.py` — a zero-*required*-dependency mechanical scanner that measures a text against the pattern catalog, plus real quantitative signals (vocabulary concentration, type-token ratio, sentence-length variance), and optional OSMAN/LIX readability scores (`pip install textstat`) using [El-Haj & Rayson's original implementation](https://github.com/drelhaj/OsmanReadability), not a reimplementation
 - `tests/test_scanner.py` — a regression suite that encodes what testing this against real text actually found (see below)
 

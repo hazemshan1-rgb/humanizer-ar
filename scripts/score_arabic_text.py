@@ -197,6 +197,31 @@ def readability_stats(text: str) -> dict[str, Any]:
     }
 
 
+def sentence_type_variety(sentences: list[str]) -> dict[str, Any]:
+    """Informational-only ratio of insha' (إنشاء: question/exclamation/vocative)
+    sentences to total sentences, per the classical khabar/insha' distinction
+    (Marathe 2022, LD A-1, citing Abdul-Raof 2006). Skilled Arabic prose
+    varies deliberately between khabar (declarative/informational) and
+    insha' forms for rhetorical rhythm; AI-generated Arabic tends toward
+    flat, unbroken khabar throughout.
+
+    NOT a flag: plenty of legitimate writing (technical docs, formal
+    reports) is khabar-only by nature, and this has no empirical validation
+    against AI-vs-human Arabic the way the vocabulary-concentration stats
+    do. It is reported purely as a style-awareness signal for the human
+    reviewer, same spirit as the readability scores.
+    """
+    total = len(sentences)
+    if total == 0:
+        return {"insha_count": 0, "total": 0, "insha_ratio": 0.0}
+    insha_count = sum(1 for s in sentences if s.strip().endswith(("؟", "!")))
+    return {
+        "insha_count": insha_count,
+        "total": total,
+        "insha_ratio": round(insha_count / total * 100, 2),
+    }
+
+
 def vocabulary_stats(words: list[str]) -> dict[str, Any]:
     content_words = [w for w in words if w not in AR_STOPWORDS and len(w) > 1]
     if not content_words:
@@ -228,6 +253,7 @@ def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
     run_ons = check_run_on_sentences(sentences, formal=formal)
     vocab = vocabulary_stats(words)
     readability = readability_stats(text)
+    variety = sentence_type_variety(sentences)
 
     violations = (
         sum(n for _, n in phrase_hits)
@@ -261,6 +287,9 @@ def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
               f"OSMAN={readability['osman']}, LIX={readability['lix']}")
     else:
         print("  Readability: unavailable (run 'pip install textstat' to enable OSMAN/LIX scores)")
+    print(f"  Sentence-type variety (khabar/insha', informational only): "
+          f"{variety['insha_count']}/{variety['total']} sentences are insha' "
+          f"(question/exclamation) = {variety['insha_ratio']}%")
     print(f"  TOTAL VIOLATIONS: {violations}")
     if len(words) > 0:
         print(f"  Violations per 100 words: {round(violations / len(words) * 100, 2)}")
@@ -271,6 +300,7 @@ def score(text: str, label: str, formal: bool = False) -> dict[str, Any]:
         "vocab": vocab,
         "sentence_variance": variance,
         "readability": readability,
+        "sentence_variety": variety,
     }
 
 
